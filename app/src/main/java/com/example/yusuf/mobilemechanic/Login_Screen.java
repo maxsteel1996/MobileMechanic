@@ -66,6 +66,7 @@ public class Login_Screen extends AppCompatActivity {
     }
 
     public void login() {
+        Backendless.initApp(this,Splash_Screen.APP_ID,Splash_Screen.SECRET_KEY,Splash_Screen.VIRSION);
         Log.d(TAG, "Login");
 
         if (!validate()) {
@@ -87,9 +88,10 @@ public class Login_Screen extends AppCompatActivity {
         Backendless.UserService.login(email, password, new AsyncCallback<BackendlessUser>() {
             @Override
             public void handleResponse(BackendlessUser response) {
+                String t= (String) response.getProperty("type");
                 Toast.makeText(getApplicationContext(),"Successfully logged", Toast.LENGTH_SHORT).show();
-                if(type.getSelectedItem().toString().equals("Driver")){
-                    startActivity(new Intent(Login_Screen.this,YourLocation.class));
+                if(t.equals("Driver")){
+                    startActivity(new Intent(Login_Screen.this,DriverLocation.class));
                 }else{
                     startActivity(new Intent(Login_Screen.this,ViewRequests.class));
                 };

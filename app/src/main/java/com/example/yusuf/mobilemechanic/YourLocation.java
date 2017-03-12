@@ -62,7 +62,7 @@ public class YourLocation extends FragmentActivity implements OnMapReadyCallback
         if (requestActive == false) {
 
             request = new Requests();
-            request.setDriverUsername("");
+            request.setMechanicUsername("");
             request.setRequesterUsername(Backendless.UserService.CurrentUser().getEmail());
             request.setMylocation(new GeoPoint(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
             Backendless.Persistence.of(Requests.class).save(request, new AsyncCallback<Requests>() {
@@ -85,8 +85,8 @@ public class YourLocation extends FragmentActivity implements OnMapReadyCallback
             infoTextView.setText("Uber Cancelled.");
             requestUberButton.setText("Request Uber");
             requestActive = false;
-
-            Backendless.Persistence.of(Requests.class).remove(request);
+//
+//            Backendless.Persistence.of(Requests.class).remove(request);
 
 
         }
@@ -102,7 +102,7 @@ public class YourLocation extends FragmentActivity implements OnMapReadyCallback
 
 
         infoTextView = (TextView) findViewById(R.id.infoTextView);
-        requestUberButton = (Button) findViewById(R.id.requestUber);
+        requestUberButton = (Button) findViewById(R.id.requestM);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         provider = locationManager.getBestProvider(new Criteria(), false);
@@ -158,9 +158,9 @@ public class YourLocation extends FragmentActivity implements OnMapReadyCallback
                             requestActive = true;
                             infoTextView.setText("Finding Uber driver...");
                             requestUberButton.setText("Cancel Uber");
-                            if (requests.getDriverUsername() != null||!(requests.getDriverUsername().equals(""))) {
+                            if (requests.getMechanicUsername() != null||!(requests.getMechanicUsername().equals(""))) {
 
-                                driverUsername =requests.getDriverUsername();
+                                driverUsername =requests.getMechanicUsername();
                                 infoTextView.setText("Your driver is on their way!");
                                 requestUberButton.setVisibility(View.INVISIBLE);
 
