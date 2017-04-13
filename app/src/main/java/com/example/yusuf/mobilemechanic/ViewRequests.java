@@ -1,6 +1,7 @@
 package com.example.yusuf.mobilemechanic;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
@@ -19,6 +20,7 @@ import android.widget.Toast;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
+import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.geo.GeoPoint;
@@ -34,12 +36,13 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
     int mi=200;
     ListView listView;
     ArrayList<String> listViewContent;
-//    ArrayList<String> usernames;
-//    ArrayList<Double> latitudes;
-//    ArrayList<Double> longitudes;
+    ArrayList<String> usernames;
+    ArrayList<Double> latitudes;
+    ArrayList<Double> longitudes;
     ArrayAdapter arrayAdapter;
     LocationManager locationManager;
     String provider;
+    Location location;
 //
 //    Location location;
 //
@@ -57,10 +60,10 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
         listView = (ListView) findViewById(R.id.listView);
         listViewContent = new ArrayList<String>();
         listViewContent.add("Finding nearby requests.....");
-//        usernames = new ArrayList<String>();
-//        latitudes = new ArrayList<Double>();
-//        longitudes = new ArrayList<Double>();
-//
+        usernames = new ArrayList<String>();
+        latitudes = new ArrayList<Double>();
+        longitudes = new ArrayList<Double>();
+
 //        listViewContent.add("Finding nearby requests..
 
         getSupportActionBar().setTitle("User Requests");
@@ -80,11 +83,11 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
             return;
         }
         locationManager.requestLocationUpdates(provider, 400, 1, this);
-        final Location location = locationManager.getLastKnownLocation(provider);
+        location = locationManager.getLastKnownLocation(provider);
 
         if (location != null) {
 
-            updateLocation(location);
+            updateLocation();
         }
 
         set.setOnClickListener(new View.OnClickListener() {
@@ -92,7 +95,7 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
             public void onClick(View view) {
                 if(editMile.getText().toString()!=""){
                     mi= Integer.parseInt(editMile.getText().toString());
-                    updateLocation(location);
+                    updateLocation();
                 }
             }
         });
@@ -100,8 +103,18 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-            }
+                if(location != null) {
+//                    Toast.makeText(getApplicationContext(),""+location.getAltitude(),Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(getApplicationContext(), ViewRequesterLocation.class);
+                    intent.putExtra("username", usernames.get(i));
+                    intent.putExtra("lattitude", latitudes.get(i));
+                    intent.putExtra("longitude", longitudes.get(i));
+                    intent.putExtra("userLat", location.getLatitude());
+                    intent.putExtra("userLon", location.getLongitude());
+                    startActivity(intent);
+                }else{
+                    Toast.makeText(ViewRequests.this, "Wait for some second, Your location is retriving", Toast.LENGTH_SHORT).show();
+                }    }
         });
 
 //        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -119,8 +132,22 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
 //            }}
     }
 
-    public void updateLocation(final Location location){
+    public void updateLocation(){
         final GeoPoint userLocation= new GeoPoint(location.getLatitude(),location.getLongitude());
+        BackendlessUser user=Backendless.UserService.CurrentUser();
+        user.setProperty("location",userLocation);
+        Backendless.UserService.update(user, new AsyncCallback<BackendlessUser>() {
+            @Override
+            public void handleResponse(BackendlessUser response) {
+
+            }
+
+            @Override
+            public void handleFault(BackendlessFault fault) {
+                Toast.makeText(getApplicationContext(),fault.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
         double myLatitude = location.getLatitude();
         double myLongitude = location.getLongitude();
         String query = "distance( %f, %f, mylocation.latitude, mylocation.longitude ) < mi("+mi+") and  MechanicUsername=''";
@@ -137,6 +164,9 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
             public void handleResponse( BackendlessCollection<Requests> cars )
             {
                 listViewContent.clear();
+                usernames.clear();
+                latitudes.clear();
+                longitudes.clear();
                 if( cars.getCurrentPage().size() == 0 ) {
 
                     Toast.makeText(ViewRequests.this, "Did not find any cars", Toast.LENGTH_SHORT).show();
@@ -151,6 +181,9 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
                     float distance = getDistanceInMiles(car.getMylocation(), userLocation);
                     
                     listViewContent.add(car.requesterUsername+"  "+Math.round(distance * 100.0) / 100.0+" miles away");
+                    usernames.add(car.getRequesterUsername());
+                    longitudes.add(car.getMylocation().getLatitude());
+                    latitudes.add(car.getMylocation().getLongitude());
                     arrayAdapter.notifyDataSetChanged();
                 }
 
@@ -179,7 +212,7 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
 
     @Override
     public void onLocationChanged(Location location) {
-        updateLocation(location);
+        updateLocation();
     }
 
     @Override

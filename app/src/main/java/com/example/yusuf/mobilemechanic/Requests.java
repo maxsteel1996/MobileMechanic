@@ -6,7 +6,7 @@ import com.backendless.geo.GeoPoint;
  * Created by ASHUTOSH on 3/13/2016.
  */
 public class Requests {
-    String MechanicUsername;
+    String mechanicUsername;
     String requesterUsername;
     GeoPoint mylocation;
     String objectId;
@@ -38,10 +38,10 @@ public class Requests {
     }
 
     public String getMechanicUsername() {
-        return MechanicUsername;
+        return mechanicUsername;
     }
 
-    public void setMechanicUsername(String driverUsername) {
-        this.MechanicUsername = driverUsername;
+    public void setMechanicUsername(String mechanicUsername) {
+        this.mechanicUsername = mechanicUsername;
     }
 }

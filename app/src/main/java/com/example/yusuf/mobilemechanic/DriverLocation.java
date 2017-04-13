@@ -28,6 +28,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.Iterator;
+import java.util.Map;
 
 public class DriverLocation extends FragmentActivity implements OnMapReadyCallback, LocationListener {
 
@@ -39,12 +40,105 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
     TextView infoTextView;
     Button requestUberButton;
     static Boolean requestActive=false;
+    String driverName="";
 
-
+    public void checkPermission(){
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            ActivityCompat.requestPermissions(DriverLocation.this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+    }
 
     public void updateLocation(Location location){
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setWhereClause( "requesterUsername='"+Backendless.UserService.CurrentUser()+"'" );
+        if(requestActive==false){
+
+            Backendless.Data.of(Requests.class).find(dataQuery, new AsyncCallback<BackendlessCollection<Requests>>() {
+                @Override
+                public void handleResponse(BackendlessCollection<Requests> response) {
+                    Iterator<Requests> iterator = response.getCurrentPage().iterator();
+
+                    while( iterator.hasNext() )
+                    {
+                        Requests req = iterator.next();
+                        requestActive=true;
+                        infoTextView.setText("Finding Mechanic nearby...");
+                        requestUberButton.setText("Cancel Request");
+                        if((req.getMechanicUsername() != null) || (req.getMechanicUsername() != "")){
+                            driverName=req.getMechanicUsername();
+                            infoTextView.setText(req.getMechanicUsername());
+                            requestUberButton.setVisibility(View.INVISIBLE);
+                        }
+                    }
+                }
+
+                @Override
+                public void handleFault(BackendlessFault fault) {
+                    Toast.makeText(getApplicationContext(),fault.getMessage(),Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 10));
         mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Location"));
+
+        if(requestActive==true){
+
+            Backendless.Data.of(Requests.class).find(dataQuery, new AsyncCallback<BackendlessCollection<Requests>>() {
+                @Override
+                public void handleResponse(BackendlessCollection<Requests> response) {
+                    Iterator<Requests> iterator = response.getCurrentPage().iterator();
+
+                    while( iterator.hasNext() )
+                    {
+                        Requests req = iterator.next();
+
+                        if((req.getMechanicUsername() != null) || (req.getMechanicUsername() != "")){
+                            driverName=req.getMechanicUsername();
+                            infoTextView.setText(req.getMechanicUsername());
+                            requestUberButton.setVisibility(View.INVISIBLE);
+                        }
+                    }
+                }
+
+                @Override
+                public void handleFault(BackendlessFault fault) {
+
+                }
+            });
+
+            if(!driverName.equals("")){
+                BackendlessDataQuery dataQuery2 = new BackendlessDataQuery();
+                dataQuery2.setWhereClause( "email='"+driverName+"'" );
+                Backendless.Persistence.of("Users").find(dataQuery2, new AsyncCallback<BackendlessCollection<Map>>() {
+                    @Override
+                    public void handleResponse(BackendlessCollection<Map> response) {
+                        Iterator<Map> iterator = response.getCurrentPage().iterator();
+                        while( iterator.hasNext() )
+                        {
+                            Map req = iterator.next();
+                            GeoPoint p= (GeoPoint) req.get("location");
+                            Toast.makeText(getApplicationContext(),""+p.getLatitude(),Toast.LENGTH_SHORT).show();
+                        }
+
+                    }
+
+                    @Override
+                    public void handleFault(BackendlessFault fault) {
+                        Toast.makeText(getApplicationContext(),""+fault.getMessage(),Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }
+
     }
 
     public void requestMechanic(View view){
@@ -132,16 +226,7 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
         requestUberButton=(Button)findViewById(R.id.requestM);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         provider = locationManager.getBestProvider(new Criteria(), false);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
+        checkPermission();
         locationManager.requestLocationUpdates(provider, 400, 1, this);
 
     }
@@ -159,16 +244,7 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
+        checkPermission();
         Location location = locationManager.getLastKnownLocation(provider);
         mLastLocation=location;
         if (location != null) {
@@ -181,32 +257,14 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
     @Override
     protected void onResume() {
         super.onResume();
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
+        checkPermission();
         locationManager.requestLocationUpdates(provider, 400, 1, this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
+        checkPermission();
         locationManager.removeUpdates(this);
     }
 

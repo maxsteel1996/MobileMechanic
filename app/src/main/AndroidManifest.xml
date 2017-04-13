@@ -45,9 +45,6 @@
             android:name=".ViewRaiderLocation"
             android:label="@string/title_activity_view_raider_location" />
         <activity
-            android:name=".YourLocation"
-            android:label="@string/title_activity_your_location" />
-        <activity
             android:name=".DriverLocation"
             android:label="@string/title_activity_driver_location" />
         <activity
