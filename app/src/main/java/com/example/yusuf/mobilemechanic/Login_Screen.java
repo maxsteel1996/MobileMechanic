@@ -1,15 +1,14 @@
 package com.example.yusuf.mobilemechanic;
 
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,8 +30,7 @@ public class Login_Screen extends AppCompatActivity {
     @InjectView(R.id.btn_login) Button _loginButton;
     @InjectView(R.id.link_signup) TextView _signupLink;
 
-    String[] types={"Driver","Mechanic"};
-    Spinner type;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -40,10 +38,9 @@ public class Login_Screen extends AppCompatActivity {
         setContentView(R.layout.activity_login__screen);
         ButterKnife.inject(this);
 
-        type=(Spinner)findViewById(R.id.dorc);
 
-        ArrayAdapter arrayAdapter=new ArrayAdapter(Login_Screen.this, android.R.layout.simple_dropdown_item_1line, types);
-        type.setAdapter(arrayAdapter);
+
+
 
 
         _loginButton.setOnClickListener(new View.OnClickListener() {
@@ -83,15 +80,19 @@ public class Login_Screen extends AppCompatActivity {
 
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
-
+        final ProgressDialog progressDialog = new ProgressDialog(Login_Screen.this);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Logging...");
+        progressDialog.show();
         // TODO: Implement your own authentication logic here.
         Backendless.UserService.login(email, password, new AsyncCallback<BackendlessUser>() {
             @Override
             public void handleResponse(BackendlessUser response) {
+                progressDialog.dismiss();
                 String t= (String) response.getProperty("type");
                 Toast.makeText(getApplicationContext(),"Successfully logged", Toast.LENGTH_SHORT).show();
                 if(t.equals("Driver")){
-                    startActivity(new Intent(Login_Screen.this,DriverLocation.class));
+                    startActivity(new Intent(Login_Screen.this,UserMenu.class));
                 }else{
                     startActivity(new Intent(Login_Screen.this,ViewRequests.class));
                 };
@@ -99,6 +100,7 @@ public class Login_Screen extends AppCompatActivity {
 
             @Override
             public void handleFault(BackendlessFault fault) {
+                progressDialog.dismiss();
                 Toast.makeText(getApplicationContext(),fault.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });

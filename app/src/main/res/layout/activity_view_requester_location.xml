@@ -19,9 +19,12 @@
     tools:context="com.example.yusuf.mobilemechanic.ViewRequesterLocation" />
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="Accept Request"
+        android:textColor="@color/colorAccent"
+        android:layout_margin="10dp"
+        android:background="@drawable/button_selector"
         android:id="@+id/acceptRequestB"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
@@ -32,6 +35,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Back"
+        android:background="@drawable/button_selector"
+        android:textColor="@color/colorAccent"
         android:id="@+id/backButton"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"

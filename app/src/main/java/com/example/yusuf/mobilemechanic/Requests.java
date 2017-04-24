@@ -10,6 +10,25 @@ public class Requests {
     String requesterUsername;
     GeoPoint mylocation;
     String objectId;
+    String vechile;
+    String problem;
+
+    public void setProblem(String problem) {
+        this.problem = problem;
+    }
+
+    public String getProblem() {
+        return problem;
+    }
+
+    public void setVechile(String vechile) {
+        this.vechile = vechile;
+    }
+
+    public String getVechile() {
+        return vechile;
+    }
+
     public String getObjectId() {
 
         return objectId;

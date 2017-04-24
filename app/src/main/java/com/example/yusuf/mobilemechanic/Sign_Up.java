@@ -96,8 +96,8 @@ public class Sign_Up extends AppCompatActivity {
             @Override
             public void handleResponse(BackendlessUser response) {
                 Toast.makeText(getApplicationContext(),"Successfully added", Toast.LENGTH_SHORT).show();
-                if(type.equals("Driver")){
-               startActivity(new Intent(Sign_Up.this,DriverLocation.class));
+                if(type.getSelectedItem().equals("Driver")){
+               startActivity(new Intent(Sign_Up.this,UserMenu.class));
             }else{
                     startActivity(new Intent(Sign_Up.this,ViewRequests.class)); }
             }

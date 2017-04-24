@@ -40,11 +40,15 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
     ArrayList<Double> latitudes;
     ArrayList<Double> longitudes;
     ArrayAdapter arrayAdapter;
+    CustomListAdapter customListAdapter;
     LocationManager locationManager;
     String provider;
     Location location;
 //
 //    Location location;
+    ArrayList<Requests> req;
+
+
 //
 //    LocationManager locationManager;
 //    String provider;
@@ -59,7 +63,8 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
 
         listView = (ListView) findViewById(R.id.listView);
         listViewContent = new ArrayList<String>();
-        listViewContent.add("Finding nearby requests.....");
+        req=new ArrayList<Requests>();
+
         usernames = new ArrayList<String>();
         latitudes = new ArrayList<Double>();
         longitudes = new ArrayList<Double>();
@@ -67,9 +72,9 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
 //        listViewContent.add("Finding nearby requests..
 
         getSupportActionBar().setTitle("User Requests");
-        arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listViewContent);
-
-        listView.setAdapter(arrayAdapter);
+//        arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listViewContent);
+        customListAdapter=new CustomListAdapter(this,req,listViewContent);
+        listView.setAdapter(customListAdapter);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         provider = locationManager.getBestProvider(new Criteria(), false);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -164,6 +169,7 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
             public void handleResponse( BackendlessCollection<Requests> cars )
             {
                 listViewContent.clear();
+                req.clear();
                 usernames.clear();
                 latitudes.clear();
                 longitudes.clear();
@@ -180,11 +186,13 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
 //                    System.out.println( String.format( "Found car: %s %s", car.make, car.model ) );
                     float distance = getDistanceInMiles(car.getMylocation(), userLocation);
                     
-                    listViewContent.add(car.requesterUsername+"  "+Math.round(distance * 100.0) / 100.0+" miles away");
+                    listViewContent.add(""+Math.round(distance * 100.0) / 100.0+" miles away");
+                    req.add(car);
                     usernames.add(car.getRequesterUsername());
                     longitudes.add(car.getMylocation().getLatitude());
                     latitudes.add(car.getMylocation().getLongitude());
-                    arrayAdapter.notifyDataSetChanged();
+//                    arrayAdapter.notifyDataSetChanged();
+                    customListAdapter.notifyDataSetChanged();
                 }
 
                 }
@@ -194,8 +202,11 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
             public void handleFault( BackendlessFault backendlessFault )
             {
                 listViewContent.clear();
+                req.clear();
                 listViewContent.add(backendlessFault.getMessage());
-                arrayAdapter.notifyDataSetChanged();
+
+//                arrayAdapter.notifyDataSetChanged();
+                customListAdapter.notifyDataSetChanged();
             }
         } );
     }

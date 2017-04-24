@@ -49,7 +49,11 @@
             android:label="@string/title_activity_driver_location" />
         <activity
             android:name=".ViewRequesterLocation"
-            android:label="@string/title_activity_view_requester_location"></activity>
+            android:label="@string/title_activity_view_requester_location" />
+        <activity android:name=".UserMenu" />
+        <activity
+            android:name=".YourLocation"
+            android:label="@string/title_activity_your_location"></activity>
     </application>
 
 </manifest>

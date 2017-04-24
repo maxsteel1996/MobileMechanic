@@ -1,8 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<LinearLayout android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/mech_back"
+    android:padding="10dp"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageView"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/signup_icon"
+
+            />
+
+
+
+    <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:background="@drawable/rectangle"
     android:fitsSystemWindows="true">
 
     <LinearLayout
@@ -10,14 +30,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="56dp"
+        android:background="@drawable/user_profile_image_background"
         android:paddingLeft="24dp"
-        android:paddingRight="24dp">
+        android:paddingRight="24dp"
+        android:weightSum="1">
 
-        <ImageView android:src="@drawable/logo"
-            android:layout_width="wrap_content"
-            android:layout_height="72dp"
-            android:layout_marginBottom="24dp"
-            android:layout_gravity="center_horizontal" />
+
+
+
         <android.support.v7.widget.AppCompatSpinner
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
@@ -36,7 +56,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textCapWords"
-                android:hint="Name" />
+                android:hint="Name"
+                android:textColorHint="@color/colorAccent"/>
         </android.support.design.widget.TextInputLayout>
 
         <!-- Email Label -->
@@ -73,6 +94,7 @@
             android:layout_marginTop="24dp"
             android:layout_marginBottom="24dp"
             android:padding="12dp"
+            android:background="@drawable/button_selector"
             android:text="Create Account"/>
 
         <TextView android:id="@+id/link_login"
@@ -85,3 +107,4 @@
 
     </LinearLayout>
 </ScrollView>
+</LinearLayout>
