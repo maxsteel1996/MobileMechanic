@@ -8,6 +8,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -18,23 +19,17 @@ import android.widget.Toast;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
-import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 
 public class DriverLocation extends FragmentActivity implements OnMapReadyCallback, LocationListener {
@@ -51,6 +46,42 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
     static Boolean requestActive=false;
     String driverName="";
     GeoPoint driverLocation = new GeoPoint(0,0);
+
+    public void drivercheck(){
+
+//        String whereClause = "requesterUsername = '"+Backendless.UserService.CurrentUser()+"'";
+        String whereClause = "requesterUsername = '"+Backendless.UserService.CurrentUser().getEmail()+"'";
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+
+        dataQuery.setWhereClause( whereClause );
+        Backendless.Data.of(Requests.class).find(dataQuery, new AsyncCallback<BackendlessCollection<Requests>>() {
+            @Override
+            public void handleResponse(BackendlessCollection<Requests> response) {
+                Iterator<Requests> iterator = response.getCurrentPage().iterator();
+
+                while( iterator.hasNext() )
+                {
+                    Requests req = iterator.next();
+
+                    if((req.getMechanicUsername() != null) && (req.getMechanicUsername() != "")){
+                        driverName=req.getMechanicUsername();
+                        infoTextView.setText(req.getMechanicUsername()+"is on the way");
+                        requestUberButton.setVisibility(View.INVISIBLE);}
+
+
+                }
+            }
+
+            @Override
+            public void handleFault(BackendlessFault fault) {
+
+                Toast.makeText(DriverLocation.this,fault.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+    };
+
+
     public void checkPermission(){
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -68,7 +99,7 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
 
     public void updateLocation(Location location){
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-        dataQuery.setWhereClause( "requesterUsername='"+Backendless.UserService.CurrentUser()+"'" );
+        dataQuery.setWhereClause( "requesterUsername='"+Backendless.UserService.CurrentUser().getEmail()+"'" );
         if(requestActive==false){
 
             Backendless.Data.of(Requests.class).find(dataQuery, new AsyncCallback<BackendlessCollection<Requests>>() {
@@ -82,7 +113,7 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
                         requestActive=true;
                         infoTextView.setText("Finding Mechanic nearby...");
                         requestUberButton.setText("Cancel Request");
-                        if((req.getMechanicUsername() != null) || (req.getMechanicUsername() != "")){
+                        if((req.getMechanicUsername() != null)&&(req.getMechanicUsername() != "")){
                             driverName=req.getMechanicUsername();
                             infoTextView.setText(req.getMechanicUsername());
                             requestUberButton.setVisibility(View.INVISIBLE);
@@ -115,7 +146,7 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
                     {
                         Requests req = iterator.next();
 
-                        if((req.getMechanicUsername() != null) || (req.getMechanicUsername() != "")){
+                        if((req.getMechanicUsername() != null) && (req.getMechanicUsername() != "")){
                             driverName=req.getMechanicUsername();
                             infoTextView.setText(req.getMechanicUsername());
                             requestUberButton.setVisibility(View.INVISIBLE);
@@ -128,59 +159,59 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
                 }
             });
 
-            if(!driverName.equals("")){
-                Backendless.Data.of(BackendlessUser.class).find(new AsyncCallback<BackendlessCollection<BackendlessUser>>() {
-                    @Override
-                    public void handleResponse(BackendlessCollection<BackendlessUser> backendlessUserBackendlessCollection) {
-                        if (backendlessUserBackendlessCollection != null) {
-                            Iterator<BackendlessUser> iterator = backendlessUserBackendlessCollection.getCurrentPage().iterator();
-
-                            while (iterator.hasNext()) {
-                                BackendlessUser user = iterator.next();
-                                if(user.getEmail().equals(driverName)){
-                                    GeoPoint geoPoint = (GeoPoint)user.getProperty("location");
-                                    driverLocation.setLatitude(geoPoint.getLatitudeE6()/1E6);
-                                    driverLocation.setLatitude(geoPoint.getLongitudeE6()/1E6);
-                                }
-
-                            }
-                        }
-                    }   @Override
-                    public void handleFault(BackendlessFault backendlessFault) {
-                        Log.i("Error", "Failed Retrieval");
-                    }
-                });
-                if (driverLocation.getLatitude() != 0 && driverLocation.getLongitude() != 0) {
-
-                    float distance = getDistanceInMiles(driverLocation, new GeoPoint(location.getAltitude(),location.getLongitude()));
-//                    float distance = getDistanceInMiles(, driverLocation);
-//                    Double distanceInMiles = driverLocation.distanceInMilesTo(new ParseGeoPoint(location.getLatitude(), location.getLongitude()));
+//            if(!driverName.equals("")){
+//                Backendless.Data.of(BackendlessUser.class).find(new AsyncCallback<BackendlessCollection<BackendlessUser>>() {
+//                    @Override
+//                    public void handleResponse(BackendlessCollection<BackendlessUser> backendlessUserBackendlessCollection) {
+//                        if (backendlessUserBackendlessCollection != null) {
+//                            Iterator<BackendlessUser> iterator = backendlessUserBackendlessCollection.getCurrentPage().iterator();
 //
-                    Double distanceOneDP = (double) Math.round(distance * 10) / 10;
-
-                    infoTextView.setText("Your driver is " + distanceOneDP.toString() + " miles away ");
-
-
-                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
-
-                    ArrayList<Marker> markers = new ArrayList<Marker>();
-
-                    markers.add(mMap.addMarker(new MarkerOptions().position(new LatLng(driverLocation.getLatitude(), driverLocation.getLongitude())).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)).title("Driver Location")));
-
-                    markers.add(mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("Your Location")));
-
-                    for (Marker marker : markers) {
-                        builder.include(marker.getPosition());
-                    }
-
-                    LatLngBounds bounds = builder.build();
-
-                    int padding = 100;
-                    CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
-
-                    mMap.animateCamera(cu);
-                }
-            }
+//                            while (iterator.hasNext()) {
+//                                BackendlessUser user = iterator.next();
+//                                if(user.getEmail().equals(driverName)){
+//                                    GeoPoint geoPoint = (GeoPoint)user.getProperty("location");
+//                                    driverLocation.setLatitude(geoPoint.getLatitudeE6()/1E6);
+//                                    driverLocation.setLatitude(geoPoint.getLongitudeE6()/1E6);
+//                                }
+//
+//                            }
+//                        }
+//                    }   @Override
+//                    public void handleFault(BackendlessFault backendlessFault) {
+//                        Log.i("Error", "Failed Retrieval");
+//                    }
+//                });
+//                if (driverLocation.getLatitude() != 0 && driverLocation.getLongitude() != 0) {
+//
+//                    float distance = getDistanceInMiles(driverLocation, new GeoPoint(location.getAltitude(),location.getLongitude()));
+////                    float distance = getDistanceInMiles(, driverLocation);
+////                    Double distanceInMiles = driverLocation.distanceInMilesTo(new ParseGeoPoint(location.getLatitude(), location.getLongitude()));
+////
+//                    Double distanceOneDP = (double) Math.round(distance * 10) / 10;
+//
+//                    infoTextView.setText("Your driver is " + distanceOneDP.toString() + " miles away ");
+//
+//
+//                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
+//
+//                    ArrayList<Marker> markers = new ArrayList<Marker>();
+//
+//                    markers.add(mMap.addMarker(new MarkerOptions().position(new LatLng(driverLocation.getLatitude(), driverLocation.getLongitude())).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)).title("Driver Location")));
+//
+//                    markers.add(mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("Your Location")));
+//
+//                    for (Marker marker : markers) {
+//                        builder.include(marker.getPosition());
+//                    }
+//
+//                    LatLngBounds bounds = builder.build();
+//
+//                    int padding = 100;
+//                    CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+//
+//                    mMap.animateCamera(cu);
+//                }
+//            }
         }
 
     }
@@ -283,6 +314,22 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
         provider = locationManager.getBestProvider(new Criteria(), false);
         checkPermission();
         locationManager.requestLocationUpdates(provider, 400, 1, this);
+        Log.e("Tests",Backendless.UserService.CurrentUser().getEmail());
+        final Handler handler = new Handler();
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                //Do something after 100ms
+                drivercheck();
+
+                handler.postDelayed(this, 2000);
+            }
+
+
+        }, 1500);
+
+
 
     }
 
@@ -301,12 +348,17 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         checkPermission();
-        Location location = locationManager.getLastKnownLocation(provider);
+        final Location location = locationManager.getLastKnownLocation(provider);
         mLastLocation=location;
         if (location != null) {
-
             updateLocation(location);
+
         }
+
+
+
+
+
         // Add a marker in Sydney and move the camera
     }
 
@@ -336,6 +388,8 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
 
     }
 
+
+
     @Override
     public void onProviderEnabled(String s) {
 
@@ -354,3 +408,5 @@ public class DriverLocation extends FragmentActivity implements OnMapReadyCallba
 
     }
 }
+
+

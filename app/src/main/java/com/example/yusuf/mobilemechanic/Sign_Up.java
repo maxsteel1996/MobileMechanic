@@ -95,12 +95,26 @@ public class Sign_Up extends AppCompatActivity {
         Backendless.UserService.register(backendlessUser, new AsyncCallback<BackendlessUser>() {
             @Override
             public void handleResponse(BackendlessUser response) {
-                Toast.makeText(getApplicationContext(),"Successfully added", Toast.LENGTH_SHORT).show();
-                if(type.getSelectedItem().equals("Driver")){
-               startActivity(new Intent(Sign_Up.this,UserMenu.class));
-            }else{
-                    startActivity(new Intent(Sign_Up.this,ViewRequests.class)); }
+
+                Backendless.UserService.login(response.getEmail(), response.getPassword(), new AsyncCallback<BackendlessUser>() {
+                    @Override
+                    public void handleResponse(BackendlessUser response) {
+                        Toast.makeText(getApplicationContext(),"Successfully added", Toast.LENGTH_SHORT).show();
+                        if(type.getSelectedItem().equals("Driver")){
+                            startActivity(new Intent(Sign_Up.this,UserMenu.class));
+                        }else{
+                            startActivity(new Intent(Sign_Up.this,ViewRequests.class)); }
+                    }
+
+                    @Override
+                    public void handleFault(BackendlessFault fault) {
+                        Toast.makeText(getApplicationContext(),fault.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+
             }
+
 
             @Override
             public void handleFault(BackendlessFault fault) {

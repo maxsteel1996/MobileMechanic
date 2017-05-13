@@ -13,8 +13,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -31,8 +29,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ViewRequests extends AppCompatActivity implements LocationListener {
-    EditText editMile;
-    Button set;
+
     int mi=200;
     ListView listView;
     ArrayList<String> listViewContent;
@@ -58,8 +55,7 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_requests);
-        editMile=(EditText)findViewById(R.id.setMile);
-        set=(Button)findViewById(R.id.set);
+
 
         listView = (ListView) findViewById(R.id.listView);
         listViewContent = new ArrayList<String>();
@@ -95,15 +91,7 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
             updateLocation();
         }
 
-        set.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(editMile.getText().toString()!=""){
-                    mi= Integer.parseInt(editMile.getText().toString());
-                    updateLocation();
-                }
-            }
-        });
+
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -175,7 +163,7 @@ public class ViewRequests extends AppCompatActivity implements LocationListener 
                 longitudes.clear();
                 if( cars.getCurrentPage().size() == 0 ) {
 
-                    Toast.makeText(ViewRequests.this, "Did not find any cars", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ViewRequests.this, "No requests", Toast.LENGTH_SHORT).show();
 
                 } else{
                     Iterator<Requests> iterator = cars.getCurrentPage().iterator();
